@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Stok & Kasir Premium</title>
+    <!-- FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Font: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ================= CSS APLIKASI (MODERN UI) ================= */
+        :root { 
+            --primary: #4f46e5; /* Indigo Modern */
+            --primary-hover: #4338ca;
+            --sidebar: #0f172a; /* Slate 900 */
+            --sidebar-hover: #1e293b;
+            --bg: #f8fafc; 
+            --text-main: #1e293b; 
+            --text-muted: #64748b;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+        
+        /* --- SIDEBAR --- */
+        .sidebar { width: 260px; background: var(--sidebar); color: white; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.05); z-index: 10; }
+        .sidebar-header { padding: 25px 20px; font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); letter-spacing: -0.5px; }
+        .sidebar-header i { color: #818cf8; font-size: 24px; }
+        .menu { list-style: none; padding: 20px 10px; flex: 1; }
+        .menu li { padding: 14px 20px; margin-bottom: 8px; border-radius: 10px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 12px; font-weight: 500; font-size: 15px; color: #cbd5e1; }
+        .menu li i { font-size: 18px; width: 20px; text-align: center; }
+        .menu li:hover { background: var(--sidebar-hover); color: white; transform: translateX(5px); }
+        .menu li.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }
+        
+        /* --- MAIN CONTENT --- */
+        .main-content { flex: 1; padding: 30px 40px; overflow-y: auto; position: relative; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header h2 { font-size: 24px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+        
+        /* --- CARDS --- */
+        .card { background: var(--card-bg); padding: 25px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05); margin-bottom: 25px; border: 1px solid var(--border); }
+        .card h3 { font-size: 18px; font-weight: 600; color: var(--text-main); margin-bottom: 5px; }
+        
+        /* --- FORM & INPUTS --- */
+        input, select, textarea { padding: 12px 15px; border: 1px solid var(--border); border-radius: 8px; outline: none; width: 100%; font-size: 14px; transition: border 0.3s, box-shadow 0.3s; background-color: #f8fafc; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); background-color: white; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 13px; color: var(--text-muted); }
+        
+        /* --- BUTTONS --- */
+        button { padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        button:active { transform: scale(0.97); }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: #dc2626; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #059669; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-warning:hover { background: #d97706; }
+        .btn-secondary { background: #e2e8f0; color: var(--text-main); }
+        .btn-secondary:hover { background: #cbd5e1; }
+        .btn-icon { padding: 8px 12px; font-size: 14px; } /* Small buttons for table actions */
+        
+        /* --- TABLES --- */
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 15px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+        th { background: #f1f5f9; font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+        th:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        th:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        tbody tr { transition: background 0.2s; }
+        tbody tr:hover { background-color: #f8fafc; }
+        
+        /* --- KASIR GRID (POS) --- */
+        .kasir-grid { display: grid; grid-template-columns: 2.5fr 1fr; gap: 25px; }
+        .produk-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; margin-top: 15px; max-height: 600px; overflow-y: auto; padding-right: 10px; }
+        .produk-card { background: white; border: 1px solid var(--border); padding: 20px 15px; text-align: center; border-radius: 12px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
+        .produk-card:hover { border-color: var(--primary); box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.1); transform: translateY(-3px); }
+        .produk-card.disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(100%); }
+        .produk-card.disabled:hover { transform: none; box-shadow: none; border-color: var(--border); }
+        
+        .prod-name { font-weight: 700; font-size: 15px; color: var(--text-main); margin-bottom: 8px; line-height: 1.3; }
+        .prod-price { color: var(--primary); font-weight: 600; font-size: 14px; }
+        .prod-stock { font-size: 12px; margin-top: 10px; display: inline-block; padding: 4px 10px; border-radius: 20px; font-weight: 600; }
+        .stock-safe { background: #d1fae5; color: #059669; }
+        .stock-low { background: #fee2e2; color: #dc2626; }
+
+        /* --- CART --- */
+        #keranjang-list { max-height: 350px; overflow-y: auto; padding-right: 5px; margin-bottom: 15px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 12px; background: #f8fafc; border-radius: 10px; border: 1px solid var(--border); }
+        .cart-info { flex: 1; }
+        .cart-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+        .cart-qty { font-size: 12px; color: var(--text-muted); }
+        .cart-price { font-weight: 700; font-size: 14px; color: var(--primary); }
+        
+        /* --- ALERTS & BADGES --- */
+        .page { display: none; animation: fadeIn 0.4s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .alert-stok { background-color: #fef2f2; border: 1px solid #f87171; padding: 15px 20px; border-radius: 10px; margin-bottom: 25px; display: none; color: #b91c1c; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1); }
+        .alert-stok i { font-size: 24px; color: #ef4444; }
+
+        /* --- MODAL EDIT (GLASSMORPHISM) --- */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 2000; align-items: center; justify-content: center; }
+        .modal-box { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 450px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes modalPop { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .modal-box h3 { margin-bottom: 20px; color: var(--text-main); border-bottom: 1px solid var(--border); padding-bottom: 15px; display: flex; align-items: center; gap: 10px; font-size: 20px; }
+        
+        /* --- SCROLLBAR CUSTOM --- */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ================= CSS PRINTER NOTA ================= */
+        #area-struk { display: none; } 
+        @media print {
+            body > *:not(#area-struk) { display: none !important; }
+            body { background: white; margin: 0; padding: 0; display: block; }
+            #area-struk { display: block !important; position: absolute; top: 0; left: 0; width: 58mm; font-family: 'Courier New', Courier, monospace; font-size: 12px; color: black; margin: 0; padding: 0 5mm; }
+            .struk-header { text-align: center; margin-bottom: 10px; }
+            .struk-header h3 { margin: 0; font-size: 16px; }
+            .struk-header p { margin: 2px 0; font-size: 10px; }
+            .struk-garis { border-top: 1px dashed black; margin: 5px 0; }
+            .struk-item { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 11px; }
+            .struk-total { text-align: right; font-weight: bold; margin-top: 5px; font-size: 13px; }
+            .struk-footer { text-align: center; margin-top: 15px; font-size: 10px; }
+            @page { margin: 0; } 
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR NAVIGATION -->
+    <div class="sidebar no-print">
+        <div class="sidebar-header"><i class="fas fa-layer-group"></i> StokPro</div>
+        <ul class="menu">
+            <li class="active" onclick="gantiPage('kasir', this)"><i class="fas fa-shopping-cart"></i> Kasir Transaksi</li>
+            <li onclick="gantiPage('master', this)"><i class="fas fa-box-open"></i> Master Barang</li>
+            <li onclick="gantiPage('rekap', this)"><i class="fas fa-chart-pie"></i> Rekap Penjualan</li>
+            <li onclick="gantiPage('pengaturan', this)"><i class="fas fa-sliders-h"></i> Pengaturan Toko</li>
+        </ul>
+    </div>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <div class="main-content no-print">
+        
+        <!-- ALERT STOK TIPIS -->
+        <div id="alert-stok" class="alert-stok">
+            <i class="fas fa-exclamation-circle"></i>
+            <div>
+                <strong>Peringatan Stok!</strong><br>
+                Ada barang yang stoknya mulai menipis (Sisa 5 atau kurang). Silakan cek halaman Master Barang.
+            </div>
+        </div>
+        
+        <!-- ================= HALAMAN KASIR ================= -->
+        <div id="kasir" class="page active">
+            <div class="header"><h2><i class="fas fa-shopping-cart"></i> Point of Sale (POS)</h2></div>
+            <div class="kasir-grid">
+                
+                <!-- Katalog Produk -->
+                <div class="card" style="display: flex; flex-direction: column;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+                        <h3>Pilih Produk</h3>
+                        <div style="position: relative; width: 250px;">
+                            <i class="fas fa-search" style="position: absolute; left: 12px; top: 14px; color: var(--text-muted); font-size: 14px;"></i>
+                            <input type="text" id="cari-kasir" placeholder="Cari nama barang..." style="padding-left: 35px; background: white;" onkeyup="renderKasir()">
+                        </div>
+                    </div>
+                    <div class="produk-list" id="daftar-produk-kasir">
+                        <!-- Render via JS -->
+                    </div>
+                </div>
+
+                <!-- Keranjang Kasir -->
+                <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <h3 style="border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 15px;"><i class="fas fa-receipt"></i> Keranjang Belanja</h3>
+                        <div id="keranjang-list">
+                            <!-- Render via JS -->
+                        </div>
+                    </div>
+                    
+                    <div style="border-top: 2px dashed var(--border); padding-top: 15px; margin-top: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <span style="font-size: 16px; color: var(--text-muted);">Total Tagihan</span>
+                            <span id="total-harga" style="font-size: 24px; font-weight: 700; color: var(--text-main);">Rp 0</span>
+                        </div>
+                        <button class="btn-success" style="width: 100%; padding: 16px; font-size: 16px; margin-bottom: 10px;" onclick="prosesTransaksi()">
+                            <i class="fas fa-print"></i> Proses & Cetak Nota
+                        </button>
+                        <button class="btn-danger" style="width: 100%; padding: 12px;" onclick="resetKeranjang()">
+                            <i class="fas fa-trash-alt"></i> Kosongkan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= HALAMAN MASTER BARANG ================= -->
+        <div id="master" class="page">
+            <div class="header"><h2><i class="fas fa-box-open"></i> Data & Stok Barang</h2></div>
+            
+            <div class="card">
+                <h3 style="margin-bottom: 15px;"><i class="fas fa-plus-circle"></i> Input Stok Baru</h3>
+                <form id="form-barang" onsubmit="tambahBarang(event)" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 15px; align-items: end;">
+                    <div>
+                        <label>Nama Barang</label>
+                        <input type="text" id="input-nama" placeholder="Misal: Beras Premium" required>
+                    </div>
+                    <div>
+                        <label>Jumlah Stok</label>
+                        <input type="number" id="input-stok" placeholder="0" required min="1" step="any">
+                    </div>
+                    <div>
+                        <label>Satuan</label>
+                        <select id="input-satuan" required>
+                            <option value="Pcs">Pcs / Buah</option>
+                            <option value="Kg">Kilogram (Kg)</option>
+                            <option value="Gram">Gram (g)</option>
+                            <option value="Liter">Liter (L)</option>
+                            <option value="Pack">Pack / Bungkus</option>
+                            <option value="Porsi">Porsi</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Harga Jual (Rp)</label>
+                        <input type="number" id="input-harga" placeholder="0" required min="0">
+                    </div>
+                    <button type="submit" class="btn-primary" style="height: 44px;"><i class="fas fa-save"></i> Simpan</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3><i class="fas fa-list-ul"></i> Daftar Inventaris</h3>
+                    <div style="position: relative; width: 300px;">
+                        <i class="fas fa-search" style="position: absolute; left: 12px; top: 14px; color: var(--text-muted); font-size: 14px;"></i>
+                        <input type="text" id="cari-master" placeholder="Cari di tabel..." style="padding-left: 35px;" onkeyup="renderBarang()">
+                    </div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table id="tabel-barang">
+                        <thead><tr><th>Nama Barang</th><th>Sisa Stok</th><th>Satuan</th><th>Harga Jual</th><th style="text-align: right;">Aksi</th></tr></thead>
+                        <tbody><!-- Render via JS --></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= HALAMAN REKAP ================= -->
+        <div id="rekap" class="page">
+            <div class="header"><h2><i class="fas fa-chart-pie"></i> Laporan Penjualan</h2></div>
+            
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                    <div>
+                        <h3 style="margin-bottom: 5px;">Histori Transaksi</h3>
+                        <p style="font-size: 13px; color: var(--text-muted);">Data transaksi dari barang yang keluar melalui kasir.</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="background: #f1f5f9; padding: 10px 20px; border-radius: 10px; border: 1px solid var(--border);">
+                            <span style="font-size: 12px; color: var(--text-muted); display: block;">Total Pendapatan</span>
+                            <span id="total-pendapatan" style="font-size: 20px; font-weight: 700; color: var(--primary);">Rp 0</span>
+                        </div>
+                        <button class="btn-success" onclick="eksporExcel()"><i class="fas fa-file-excel"></i> Export CSV</button>
+                        <button class="btn-danger" onclick="hapusRekap()"><i class="fas fa-trash-alt"></i> Reset Data</button>
+                    </div>
+                </div>
+                
+                <div style="overflow-x: auto;">
+                    <table id="tabel-rekap">
+                        <thead><tr><th width="20%">Waktu Transaksi</th><th>Detail Pembelian</th><th width="20%">Total Nilai</th></tr></thead>
+                        <tbody><!-- Render via JS --></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PENGATURAN TOKO ================= -->
+        <div id="pengaturan" class="page">
+            <div class="header"><h2><i class="fas fa-sliders-h"></i> Pengaturan Toko</h2></div>
+            
+            <div class="card" style="max-width: 600px;">
+                <h3 style="margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">Format Struk Nota</h3>
+                <form onsubmit="simpanPengaturan(event)">
+                    <div style="margin-bottom: 20px;">
+                        <label>Nama Toko (Akan tampil di Header Nota)</label>
+                        <input type="text" id="set-nama" placeholder="Contoh: TOKO STOKPRO" required>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label>Alamat & Kontak</label>
+                        <textarea id="set-alamat" rows="3" placeholder="Alamat lengkap dan no telepon..." required></textarea>
+                    </div>
+                    <div style="margin-bottom: 25px;">
+                        <label>Pesan Penutup (Footer Nota)</label>
+                        <textarea id="set-pesan" rows="2" placeholder="Contoh: Terima kasih atas kunjungannya!" required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary" style="width: 100%;"><i class="fas fa-save"></i> Simpan Pengaturan</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL EDIT DATA BARANG ================= -->
+    <div id="modal-edit" class="modal-overlay">
+        <div class="modal-box">
+            <h3><i class="fas fa-edit" style="color: var(--warning);"></i> Update Data Barang</h3>
+            <form onsubmit="simpanEdit(event)">
+                <input type="hidden" id="edit-id">
+                <div style="margin-bottom: 15px;">
+                    <label>Nama Barang</label>
+                    <input type="text" id="edit-nama" required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label>Sisa Stok</label>
+                        <input type="number" id="edit-stok" required step="any">
+                    </div>
+                    <div>
+                        <label>Satuan</label>
+                        <select id="edit-satuan" required>
+                            <option value="Pcs">Pcs</option>
+                            <option value="Kg">Kg</option>
+                            <option value="Gram">Gram</option>
+                            <option value="Liter">Liter</option>
+                            <option value="Pack">Pack</option>
+                            <option value="Porsi">Porsi</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="margin-bottom: 25px;">
+                    <label>Harga Jual (Rp)</label>
+                    <input type="number" id="edit-harga" required min="0">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn-secondary" onclick="tutupModal()">Batal</button>
+                    <button type="submit" class="btn-primary">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= AREA CETAK NOTA (HIDDEN) ================= -->
+    <div id="area-struk">
+        <div class="struk-header">
+            <h3 id="struk-nama-toko">NAMA TOKO</h3>
+            <p id="struk-alamat">Alamat Toko</p>
+            <p id="struk-tanggal"></p>
+        </div>
+        <div class="struk-garis"></div>
+        <div id="struk-item-list"></div>
+        <div class="struk-garis"></div>
+        <div class="struk-total" id="struk-total-harga">Total: Rp 0</div>
+        <div class="struk-footer">
+            <p id="struk-pesan">Terima Kasih!</p>
+        </div>
+    </div>
+
+    <!-- ================= LOGIKA JAVASCRIPT ================= -->
+    <script>
+        // INISIALISASI LOCAL STORAGE
+        let dataBarang = JSON.parse(localStorage.getItem('stokpro_barang')) || [];
+        let rekapTransaksi = JSON.parse(localStorage.getItem('stokpro_rekap')) || [];
+        let keranjang = JSON.parse(localStorage.getItem('stokpro_keranjang')) || [];
+        let pengaturan = JSON.parse(localStorage.getItem('stokpro_pengaturan')) || {
+            nama: "TOKO STOKPRO", alamat: "Jl. Contoh No. 123\nTelp: 08123456789", pesan: "Terima Kasih atas Kunjungan Anda!\nBarang tidak dapat ditukar."
+        };
+
+        const formatRp = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+
+        function simpanData() {
+            localStorage.setItem('stokpro_barang', JSON.stringify(dataBarang));
+            localStorage.setItem('stokpro_rekap', JSON.stringify(rekapTransaksi));
+            localStorage.setItem('stokpro_keranjang', JSON.stringify(keranjang));
+            localStorage.setItem('stokpro_pengaturan', JSON.stringify(pengaturan));
+            cekStokMinimum();
+        }
+
+        // NAVIGASI
+        function gantiPage(pageId, element) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            document.querySelectorAll('.menu li').forEach(li => li.classList.remove('active'));
+            element.classList.add('active');
+            renderSemua();
+        }
+
+        function cekStokMinimum() {
+            let adaStokTipis = dataBarang.some(b => b.stok <= 5);
+            document.getElementById('alert-stok').style.display = adaStokTipis ? 'flex' : 'none';
+        }
+
+        // PENGATURAN TOKO
+        function loadPengaturan() {
+            document.getElementById('set-nama').value = pengaturan.nama;
+            document.getElementById('set-alamat').value = pengaturan.alamat;
+            document.getElementById('set-pesan').value = pengaturan.pesan;
+        }
+        function simpanPengaturan(e) {
+            e.preventDefault();
+            pengaturan.nama = document.getElementById('set-nama').value;
+            pengaturan.alamat = document.getElementById('set-alamat').value;
+            pengaturan.pesan = document.getElementById('set-pesan').value;
+            simpanData();
+            alert("Pengaturan Toko Berhasil Disimpan!");
+        }
+
+        // MASTER BARANG
+        function tambahBarang(e) {
+            e.preventDefault();
+            const nama = document.getElementById('input-nama').value;
+            const stok = parseFloat(document.getElementById('input-stok').value);
+            const satuan = document.getElementById('input-satuan').value;
+            const harga = parseInt(document.getElementById('input-harga').value);
+            
+            let barangAda = dataBarang.find(b => b.nama.toLowerCase() === nama.toLowerCase() && b.satuan === satuan);
+            if(barangAda) {
+                barangAda.stok += stok; 
+                barangAda.harga = harga; 
+            } else {
+                dataBarang.push({ id: Date.now().toString(), nama, stok, satuan, harga });
+            }
+            e.target.reset();
+            simpanData(); renderSemua();
+        }
+
+        function hapusBarang(id) {
+            if(confirm("Yakin ingin menghapus barang ini?")) {
+                dataBarang = dataBarang.filter(b => b.id !== id);
+                simpanData(); renderSemua();
+            }
+        }
+
+        // MODAL EDIT
+        function bukaModalEdit(id) {
+            let barang = dataBarang.find(b => b.id === id);
+            if(barang) {
+                document.getElementById('edit-id').value = barang.id;
+                document.getElementById('edit-nama').value = barang.nama;
+                document.getElementById('edit-stok').value = barang.stok;
+                document.getElementById('edit-satuan').value = barang.satuan || 'Pcs';
+                document.getElementById('edit-harga').value = barang.harga;
+                document.getElementById('modal-edit').style.display = 'flex';
+            }
+        }
+        function tutupModal() { document.getElementById('modal-edit').style.display = 'none'; }
+        function simpanEdit(e) {
+            e.preventDefault();
+            let id = document.getElementById('edit-id').value;
+            let barang = dataBarang.find(b => b.id === id);
+            if(barang) {
+                barang.nama = document.getElementById('edit-nama').value;
+                barang.stok = parseFloat(document.getElementById('edit-stok').value);
+                barang.satuan = document.getElementById('edit-satuan').value;
+                barang.harga = parseInt(document.getElementById('edit-harga').value);
+                simpanData(); renderSemua(); tutupModal();
+            }
+        }
+
+        // KASIR & KERANJANG
+        function tambahKeKeranjang(id) {
+            let barang = dataBarang.find(b => b.id === id);
+            if (barang.stok <= 0) return;
+
+            let item = keranjang.find(k => k.id === id);
+            if (item) {
+                if(item.qty >= barang.stok) return alert("Stok tidak mencukupi!");
+                item.qty += 1;
+            } else {
+                keranjang.push({ id: barang.id, nama: barang.nama, harga: barang.harga, satuan: barang.satuan, qty: 1 });
+            }
+            simpanData(); renderKasir();
+        }
+
+        function hapusDariKeranjang(id) {
+            keranjang = keranjang.filter(k => k.id !== id);
+            simpanData(); renderKasir();
+        }
+        function resetKeranjang() { keranjang = []; simpanData(); renderKasir(); }
+
+        function prosesTransaksi() {
+            if(keranjang.length === 0) return alert("Keranjang belanja masih kosong!");
+
+            let totalBelanja = 0; let strukHTML = ""; let detailRekapText = [];
+
+            keranjang.forEach(item => {
+                let barangDB = dataBarang.find(b => b.id === item.id);
+                if(barangDB) barangDB.stok -= item.qty; 
+                let subTotal = item.qty * item.harga;
+                totalBelanja += subTotal;
+                
+                strukHTML += `
+                    <div style="font-weight:bold;">${item.nama}</div>
+                    <div class="struk-item">
+                        <span>${item.qty} ${item.satuan || ''} x ${item.harga.toLocaleString('id-ID')}</span>
+                        <span>${subTotal.toLocaleString('id-ID')}</span>
+                    </div>`;
+                detailRekapText.push(`${item.nama} (${item.qty} ${item.satuan || ''})`);
+            });
+
+            let waktu = new Date().toLocaleString('id-ID');
+            rekapTransaksi.push({ waktu, detail: detailRekapText.join(', '), total: totalBelanja });
+
+            document.getElementById('struk-nama-toko').innerText = pengaturan.nama;
+            document.getElementById('struk-alamat').innerText = pengaturan.alamat;
+            document.getElementById('struk-pesan').innerText = pengaturan.pesan;
+            document.getElementById('struk-tanggal').innerText = waktu;
+            document.getElementById('struk-item-list').innerHTML = strukHTML;
+            document.getElementById('struk-total-harga').innerText = "Total: " + formatRp(totalBelanja);
+
+            window.print(); 
+            keranjang = []; 
+            simpanData(); renderSemua();
+        }
+
+        // EKSPOR & REKAP
+        function eksporExcel() {
+            if(rekapTransaksi.length === 0) return alert("Belum ada data penjualan.");
+            let csvContent = "data:text/csv;charset=utf-8,Waktu,Detail Barang Terjual,Total Pendapatan\n";
+            rekapTransaksi.forEach(r => {
+                let row = `"${r.waktu}","${r.detail}",${r.total}`;
+                csvContent += row + "\r\n";
+            });
+            let encodedUri = encodeURI(csvContent);
+            let link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "Laporan_Penjualan.csv");
+            document.body.appendChild(link);
+            link.click(); document.body.removeChild(link);
+        }
+
+        function hapusRekap() {
+            if(confirm("PERINGATAN: Yakin ingin mereset/menghapus SEMUA histori transaksi penjualan?")) {
+                rekapTransaksi = []; simpanData(); renderRekap();
+            }
+        }
+
+        // ================= FUNGSI RENDER TAMPILAN =================
+        function renderBarang() {
+            let tbody = document.querySelector('#tabel-barang tbody');
+            let katakunci = document.getElementById('cari-master').value.toLowerCase();
+            tbody.innerHTML = '';
+            
+            let filterData = dataBarang.filter(b => b.nama.toLowerCase().includes(katakunci));
+            
+            if(filterData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:20px;">Belum ada data barang.</td></tr>`;
+                return;
+            }
+
+            filterData.forEach(b => {
+                let isLow = b.stok <= 5;
+                let badgeClass = isLow ? 'stock-low' : 'stock-safe';
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight: 500;">${b.nama}</td>
+                        <td><span class="prod-stock ${badgeClass}">${b.stok}</span></td>
+                        <td>${b.satuan || '-'}</td>
+                        <td style="font-weight: 600; color: var(--primary);">${formatRp(b.harga)}</td>
+                        <td style="text-align: right;">
+                            <button class="btn-warning btn-icon" onclick="bukaModalEdit('${b.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="btn-danger btn-icon" onclick="hapusBarang('${b.id}')" title="Hapus"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        function renderKasir() {
+            let divProduk = document.getElementById('daftar-produk-kasir');
+            let katakunci = document.getElementById('cari-kasir').value.toLowerCase();
+            divProduk.innerHTML = '';
+            
+            let filterData = dataBarang.filter(b => b.nama.toLowerCase().includes(katakunci));
+
+            if(filterData.length === 0) {
+                divProduk.innerHTML = `<div style="grid-column: 1/-1; text-align:center; color:#94a3b8; padding:30px;">Produk tidak ditemukan.</div>`;
+            }
+
+            filterData.forEach(b => {
+                let isDisabled = b.stok <= 0;
+                let cardClass = isDisabled ? "produk-card disabled" : "produk-card";
+                let badgeClass = b.stok <= 5 ? "stock-low" : "stock-safe";
+                
+                divProduk.innerHTML += `
+                    <div class="${cardClass}" onclick="${!isDisabled ? `tambahKeKeranjang('${b.id}')` : ''}">
+                        <div class="prod-name">${b.nama}</div>
+                        <div class="prod-price">${formatRp(b.harga)}</div>
+                        <div class="prod-stock ${badgeClass}">Sisa: ${b.stok} ${b.satuan || ''}</div>
+                    </div>`;
+            });
+
+            // Keranjang
+            let divKeranjang = document.getElementById('keranjang-list');
+            let total = 0;
+            if(keranjang.length === 0) {
+                divKeranjang.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:30px 10px; border:2px dashed var(--border); border-radius:10px;">Keranjang kosong.<br><small>Pilih produk di sebelah kiri</small></div>';
+            } else {
+                divKeranjang.innerHTML = '';
+                keranjang.forEach(k => {
+                    let sub = k.qty * k.harga;
+                    total += sub;
+                    divKeranjang.innerHTML += `
+                        <div class="cart-item">
+                            <div class="cart-info">
+                                <div class="cart-title">${k.nama}</div>
+                                <div class="cart-qty">${k.qty} ${k.satuan || ''} x ${k.harga.toLocaleString('id-ID')}</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div class="cart-price">${formatRp(sub)}</div>
+                                <button class="btn-danger" style="padding: 5px 10px; margin-top:5px; font-size:12px;" onclick="hapusDariKeranjang('${k.id}')"><i class="fas fa-times"></i></button>
+                            </div>
+                        </div>`;
+                });
+            }
+            document.getElementById('total-harga').innerText = formatRp(total);
+        }
+
+        function renderRekap() {
+            let tbody = document.querySelector('#tabel-rekap tbody');
+            tbody.innerHTML = '';
+            let grandTotal = 0;
+            
+            if(rekapTransaksi.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#94a3b8; padding:20px;">Belum ada riwayat transaksi.</td></tr>`;
+            } else {
+                rekapTransaksi.forEach(r => {
+                    grandTotal += r.total;
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="color: var(--text-muted);">${r.waktu}</td>
+                            <td style="font-weight: 500;">${r.detail}</td>
+                            <td style="font-weight: 700; color: var(--primary);">${formatRp(r.total)}</td>
+                        </tr>`;
+                });
+            }
+            document.getElementById('total-pendapatan').innerText = formatRp(grandTotal);
+        }
+
+        function renderSemua() { 
+            renderBarang(); renderKasir(); renderRekap(); loadPengaturan(); cekStokMinimum();
+        }
+
+        // Tutup modal jika klik di luar area modal
+        window.onclick = function(event) {
+            let modal = document.getElementById('modal-edit');
+            if (event.target === modal) tutupModal();
+        }
+
+        // INIT
+        renderSemua();
+    </script>
+</body>
+</html>
